@@ -1,4 +1,4 @@
-# Cinepapa
+# Flickystream
 
 A modern streaming platform built with React, TypeScript, and Firebase, featuring movies, TV shows, and sports content with PWA support.
 [![CodeQL](https://github.com/chintan992/letsstream2/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/chintan992/letsstream2/actions/workflows/github-code-scanning/codeql)
