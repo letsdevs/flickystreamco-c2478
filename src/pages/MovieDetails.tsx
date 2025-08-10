@@ -6,6 +6,7 @@ import { MovieDetails, Media, CastMember } from '@/utils/types';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import ContentRow from '@/components/ContentRow';
+import ReviewSection from '@/components/ReviewSection';
 import { Play, Clock, Calendar, Star, ArrowLeft, Shield, Heart, Bookmark } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWatchHistory } from '@/hooks/watch-history';
@@ -108,7 +109,7 @@ const MovieDetailsPage = () => {
 
   // Disqus integration
   useEffect(() => {
-    if (activeTab !== 'reviews' || !movie?.id) return;
+    if (!movie?.id) return;
 
     // Define Disqus configuration
     (window as any).disqus_config = function () {
@@ -139,22 +140,14 @@ const MovieDetailsPage = () => {
       loadDisqus();
     }
 
-    // Cleanup
+    // Cleanup: Clear thread content (but keep script for performance)
     return () => {
-      // Clear Disqus thread content
       const disqusThread = document.getElementById('disqus_thread');
       if (disqusThread) {
         disqusThread.innerHTML = '';
       }
-      // Optionally remove Disqus script to prevent memory leaks
-      const disqusScript = document.querySelector('script[src="https://cinepapa.disqus.com/embed.js"]');
-      if (disqusScript && disqusScript.parentNode) {
-        disqusScript.parentNode.removeChild(disqusScript);
-      }
-      // Reset Disqus global variable
-      (window as any).DISQUS = undefined;
     };
-  }, [activeTab, movie?.id, movie?.title]);
+  }, [movie?.id, movie?.title]);
 
   const handlePlayMovie = () => {
     if (movie) {
@@ -498,19 +491,30 @@ const MovieDetailsPage = () => {
             {movie && <DownloadSection mediaName={movie.title} />}
           </div>
         ) : (
-          /* Reviews section with Disqus */
+          /* Reviews section */
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-white mb-4">User Reviews</h3>
-            <div id="disqus_thread"></div>
-            <noscript>
-              Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
-            </noscript>
+            <ReviewSection mediaId={parseInt(id!, 10)} mediaType="movie" />
           </div>
         )}
       </div>
-
+      
       {/* Recommendations Section */}
-      {recommendations.length > 0 && <ContentRow title="More Like This" media={recommendations} />}
+      {recommendations.length > 0 && (
+        <ContentRow
+          title="More Like This"
+          media={recommendations}
+        />
+      )}
+      
+      {/* Disqus Comments Section */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <h3 className="text-xl font-semibold text-white mb-4">Comments</h3>
+        <div id="disqus_thread"></div>
+        <noscript>
+          Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
     </div>
   );
 };
