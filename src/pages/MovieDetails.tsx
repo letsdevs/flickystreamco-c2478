@@ -110,41 +110,49 @@ const MovieDetailsPage = () => {
   useEffect(() => {
     if (activeTab !== 'reviews' || !movie?.id) return;
 
-    // Reset Disqus for new movie
-    const disqus_config = function () {
-      this.page.url = window.location.href; // Use current page URL
+    // Define Disqus configuration
+    (window as any).disqus_config = function () {
+      this.page.url = window.location.href; // Current page URL
       this.page.identifier = `movie-${movie.id}`; // Unique identifier for the movie
       this.page.title = movie.title; // Movie title
     };
 
     // Load Disqus script
     const loadDisqus = () => {
-      const script = document.createElement('script');
-      script.src = 'https://cinepapa.disqus.com/embed.js';
-      script.setAttribute('data-timestamp', `${+new Date()}`);
-      script.async = true;
-      (document.head || document.body).appendChild(script);
-
-      // Ensure Disqus global variable is set
-      (window as any).disqus_config = disqus_config;
+      const d = document;
+      const s = d.createElement('script');
+      s.src = 'https://cinepapa.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', `${+new Date()}`);
+      s.async = true;
+      (d.head || d.body).appendChild(s);
     };
 
-    // Check if Disqus is already loaded
+    // Reset or load Disqus
     if ((window as any).DISQUS) {
+      // Reset Disqus for new movie
       (window as any).DISQUS.reset({
         reload: true,
-        config: disqus_config,
+        config: (window as any).disqus_config,
       });
     } else {
+      // Load Disqus for the first time
       loadDisqus();
     }
 
-    // Cleanup to prevent memory leaks
+    // Cleanup
     return () => {
+      // Clear Disqus thread content
       const disqusThread = document.getElementById('disqus_thread');
       if (disqusThread) {
         disqusThread.innerHTML = '';
       }
+      // Optionally remove Disqus script to prevent memory leaks
+      const disqusScript = document.querySelector('script[src="https://cinepapa.disqus.com/embed.js"]');
+      if (disqusScript && disqusScript.parentNode) {
+        disqusScript.parentNode.removeChild(disqusScript);
+      }
+      // Reset Disqus global variable
+      (window as any).DISQUS = undefined;
     };
   }, [activeTab, movie?.id, movie?.title]);
 
@@ -471,11 +479,11 @@ const MovieDetailsPage = () => {
                         className="rounded-lg w-24 h-32 object-cover mx-auto mb-2"
                       />
                     ) : (
-                      <div className="rounded-lg w-24 h-32 bg-white/10 flex items-center justify-center mx-auto mb-2 text#ab-white/60 text-xs">
+                      <div className="rounded-lg w-24 h-32 bg-white/10 flex items-center justify-center mx-auto mb-2 text-white/60 text-xs">
                         No Image
                       </div>
                     )}
-                    <p className="text-white/ 어90 text-sm font-medium truncate">{member.name}</p>
+                    <p className="text-white/90 text-sm font-medium truncate">{member.name}</p>
                     <p className="text-white/60 text-xs truncate">{member.character}</p>
                   </div>
                 ))}
@@ -494,6 +502,9 @@ const MovieDetailsPage = () => {
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-white mb-4">User Reviews</h3>
             <div id="disqus_thread"></div>
+            <noscript>
+              Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+            </noscript>
           </div>
         )}
       </div>
