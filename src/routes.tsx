@@ -20,8 +20,7 @@ const SportMatchPlayer = lazy(() => import('./pages/SportMatchPlayer'));
 const Player = lazy(() => import('./pages/Player'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Trending = lazy(() => import('./pages/Trending'));
-const About = lazy(() => import('./pages/About')); // Import About page
-
+const About = lazy(() => import('./pages/About')); // Added About page
 // Live streams pages
 const LiveStreams = lazy(() => import('./pages/LiveStreams'));
 const LiveStreamPlayer = lazy(() => import('./pages/LiveStreamPlayer'));
