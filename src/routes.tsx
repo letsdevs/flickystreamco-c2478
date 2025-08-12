@@ -1,4 +1,3 @@
-
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -21,6 +20,7 @@ const SportMatchPlayer = lazy(() => import('./pages/SportMatchPlayer'));
 const Player = lazy(() => import('./pages/Player'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Trending = lazy(() => import('./pages/Trending'));
+const About = lazy(() => import('./pages/About')); // Import About page
 
 // Live streams pages
 const LiveStreams = lazy(() => import('./pages/LiveStreams'));
@@ -60,6 +60,9 @@ export default function AppRoutes() {
           <Route path="/search" element={<Search />} />
           <Route path="/trending" element={<Trending />} />
           
+          {/* About route */}
+          <Route path="/about" element={<About />} />
+
           {/* Live streams routes */}
           <Route path="/live" element={<LiveStreams />} />
           <Route path="/watch/live/:id" element={<LiveStreamPlayer />} />
