@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, useLocation, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/theme';
 import { UserPreferencesProvider } from './contexts/user-preferences';
@@ -14,8 +14,7 @@ import { ChatbotProvider } from './contexts/chatbot-context';
 import ChatbotButton from './components/chatbot/ChatbotButton';
 import ChatbotWindow from './components/chatbot/ChatbotWindow';
 import ProactiveSuggestions from './components/chatbot/ProactiveSuggestions';
-import Home from './pages/Home'; // Import Home page
-import About from './pages/About'; // Import About page
+import AppRoutes from './routes.tsx';
 import { trackPageView } from './lib/analytics';
 import './App.css';
 import './styles/notifications.css';
@@ -85,7 +84,7 @@ function App() {
    * - Shows a notification when a new service worker is available.
    * - Handles update acceptance and reloads the app when the new service worker takes control.
    * - Provides enhanced error handling and user notifications for critical failures.
-   * - Includes routes for Home and About pages.
+   * - Delegates routing to AppRoutes, including all pages and the new About page.
    */
   return (
     <QueryClientProvider client={queryClient}>
@@ -107,11 +106,7 @@ function App() {
                             />
                           )}
                           {isDevelopment && <ServiceWorkerDebugPanel />}
-                          <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/about" element={<About />} />
-                            {/* Add other existing routes from AppRoutes here if needed */}
-                          </Routes>
+                          <AppRoutes />
                           <ChatbotButton />
                           <ChatbotWindow />
                           <ProactiveSuggestions />
