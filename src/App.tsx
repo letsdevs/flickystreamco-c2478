@@ -15,6 +15,7 @@ import ChatbotButton from './components/chatbot/ChatbotButton';
 import ChatbotWindow from './components/chatbot/ChatbotWindow';
 import ProactiveSuggestions from './components/chatbot/ProactiveSuggestions';
 import AppRoutes from './routes.tsx';
+// ...existing code...
 import { trackPageView } from './lib/analytics';
 import './App.css';
 import './styles/notifications.css';
@@ -42,9 +43,15 @@ function AnalyticsWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+
 function App() {
   const isDevelopment = import.meta.env.DEV;
   const [swUpdateAvailable, setSwUpdateAvailable] = React.useState(false);
+
+  // React.useEffect(() => {
+  // ...existing code...
+  // }, []);
+
 
   /**
    * Handles acceptance of a service worker update.
@@ -75,17 +82,16 @@ function App() {
       }
     }
   };
+/**
+ * App component for the Let's Stream PWA.
+ *
+ * Handles service worker update notifications, error boundaries, and context providers.
+ *
+ * - Shows a notification when a new service worker is available.
+ * - Handles update acceptance and reloads the app when the new service worker takes control.
+ * - Provides enhanced error handling and user notifications for critical failures.
+ */
 
-  /**
-   * App component for the Let's Stream PWA.
-   *
-   * Handles service worker update notifications, error boundaries, context providers, and routing.
-   *
-   * - Shows a notification when a new service worker is available.
-   * - Handles update acceptance and reloads the app when the new service worker takes control.
-   * - Provides enhanced error handling and user notifications for critical failures.
-   * - Delegates routing to AppRoutes, including all pages and the new About page.
-   */
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -97,19 +103,19 @@ function App() {
                   <WatchHistoryProvider>
                     <UserProfileProvider>
                       <ChatbotProvider>
-                        <AnalyticsWrapper>
-                          <FeatureNotificationsListener />
-                          {swUpdateAvailable && (
-                            <ServiceWorkerUpdateNotification
-                              onAcceptUpdate={handleSwUpdateAccept}
-                              onDismiss={() => setSwUpdateAvailable(false)}
-                            />
-                          )}
-                          {isDevelopment && <ServiceWorkerDebugPanel />}
-                          <AppRoutes />
-                          <ChatbotButton />
-                          <ChatbotWindow />
-                          <ProactiveSuggestions />
+                      <AnalyticsWrapper>
+                        <FeatureNotificationsListener />
+                        {swUpdateAvailable && (
+                          <ServiceWorkerUpdateNotification 
+                            onAcceptUpdate={handleSwUpdateAccept}
+                            onDismiss={() => setSwUpdateAvailable(false)}
+                          />
+                        )}
+                        {isDevelopment && <ServiceWorkerDebugPanel />}
+                        <AppRoutes />
+                        <ChatbotButton />
+                        <ChatbotWindow />
+                        <ProactiveSuggestions />
                         </AnalyticsWrapper>
                       </ChatbotProvider>
                     </UserProfileProvider>
