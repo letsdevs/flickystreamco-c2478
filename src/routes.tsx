@@ -67,13 +67,13 @@ export default function AppRoutes() {
           <Route path="/live" element={<LiveStreams />} />
           <Route path="/watch/live/:id" element={<LiveStreamPlayer />} />
 
-          {/* Legal routes */}
+          /* Legal routes */
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/content-removal" element={<ContentRemoval />} />
           <Route path="/dmca" element={<DMCANotice />} />
 
-          {/* 404 route */}
+          /* 404 route */
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnalyticsWrapper>
