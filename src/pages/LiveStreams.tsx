@@ -5,115 +5,131 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import LiveStreamCard from '@/components/LiveStreamCard';
+import { useLiveStreams } from '@/hooks/use-live-streams';
 import PageTransition from '@/components/PageTransition';
-import { useCategories, useChannels } from '@/hooks/use-live-streams';
 
+// Type for each live stream
 export interface LiveStream {
-  channel_name: string;
-  logo: string;
-  catagory: string;
-  url: string;
-  license_key: string;
+  event_catagory: string;
+  event_name: string;
+  match_id: number;
+  match_name: string;
+  team_1: string;
+  team_1_flag: string;
+  team_2: string;
+  team_2_flag: string;
+  banner: string;
+  stream_link: string;
 }
 
+// Component
 const LiveStreams = () => {
-  const [activeTab, setActiveTab] = useState<string>('dangal');
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const { data, isLoading, isError, error, refetch } = useLiveStreams();
 
-  // Fetch categories
-  const { data: categories, isLoading: loadingCats, isError: catsError, error: catsErr, refetch: refetchCats } = useCategories();
-
-  // Fetch channels for the active category
-  const { data: channels, isLoading: loadingChans, isError: chansError, error: chansErr, refetch: refetchChans } = useChannels(activeTab);
-
-  // Handle manual refresh
+  // Manual refresh handler
   const handleRefresh = () => {
     toast({
-      title: 'Refreshing channels',
-      description: `Fetching the latest channels for ${activeTab}...`
+      title: 'Refreshing live streams',
+      description: 'Fetching the latest live streams data...'
     });
-    refetchCats();
-    refetchChans();
+    refetch();
   };
+
+  // Categories
+  const categories: string[] = data?.matches
+    ? ['all', ...Array.from(new Set(data.matches.map(s => s.event_catagory?.toLowerCase() || 'uncategorized')))]
+    : ['all'];
+
+  // Filter by active tab
+  const filteredStreams: LiveStream[] = data?.matches
+    ? data.matches.filter(stream =>
+        activeTab === 'all' || stream.event_catagory?.toLowerCase() === activeTab
+      )
+    : [];
 
   return (
     <PageTransition>
       <div className="container mx-auto py-8 px-4">
+        {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Live TV Channels</h1>
+            <h1 className="text-3xl font-bold text-white">Live Streams</h1>
             <p className="text-gray-400 mt-2">
-              {categories ? `${categories.length} categories available` : 'Loading categories...'}
+              {data
+                ? `${data.total_mathes || 0} live streams available • Last updated: ${data.last_upaded || 'N/A'}`
+                : 'Loading available streams...'}
             </p>
           </div>
-          <Button 
-            onClick={handleRefresh} 
+          <Button
+            onClick={handleRefresh}
             variant="outline"
             className="flex items-center gap-2"
-            disabled={loadingCats || loadingChans}
+            disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 ${(loadingCats || loadingChans) ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
 
-        {catsError || chansError ? (
+        {/* Error State */}
+        {isError ? (
           <div className="bg-red-900/20 border border-red-900/50 rounded-lg p-6 flex flex-col items-center justify-center text-center">
             <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">Failed to load data</h2>
+            <h2 className="text-xl font-semibold text-white mb-2">Failed to load live streams</h2>
             <p className="text-gray-400 mb-4 max-w-md">
-              {catsErr instanceof Error ? catsErr.message : chansErr instanceof Error ? chansErr.message : 'An unexpected error occurred. Please try again.'}
+              {error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.'}
             </p>
-            <Button onClick={handleRefresh} variant="destructive">
+            <Button onClick={() => refetch()} variant="destructive">
               Try Again
             </Button>
           </div>
         ) : (
           <>
-            <Tabs 
-              defaultValue={activeTab} 
+            {/* Tabs */}
+            <Tabs
+              defaultValue="all"
               value={activeTab}
               onValueChange={setActiveTab}
               className="mb-6"
             >
-              <TabsList className="bg-background/30 backdrop-blur-sm">
-                {loadingCats
-                  ? <span className="text-gray-400 px-4">Loading categories...</span>
-                  : categories?.map((category) => (
-                      <TabsTrigger 
-                        key={category} 
-                        value={category}
-                        className="capitalize"
-                      >
-                        {category}
-                      </TabsTrigger>
-                    ))
-                }
+              <TabsList className="bg-background/30 backdrop-blur-sm flex-wrap">
+                {categories.map(category => (
+                  <TabsTrigger key={category} value={category} className="capitalize">
+                    {category}
+                  </TabsTrigger>
+                ))}
               </TabsList>
-              
+
               <TabsContent value={activeTab} className="mt-6">
-                {loadingChans ? (
+                {/* Loading Skeleton */}
+                {isLoading ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[...Array(6)].map((_, i) => (
-                      <div 
+                      <div
                         key={i}
                         className="bg-card/30 animate-pulse rounded-lg h-[320px]"
-                      ></div>
+                      />
                     ))}
                   </div>
-                ) : channels && channels.length > 0 ? (
-                  <motion.div 
+                ) : filteredStreams.length > 0 ? (
+                  // Live Stream Cards
+                  <motion.div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ staggerChildren: 0.1 }}
                   >
-                    {channels.map((stream) => (
-                      <LiveStreamCard key={stream.channel_name} stream={stream} />
+                    {filteredStreams.map(stream => (
+                      <LiveStreamCard key={stream.match_id} stream={stream} />
                     ))}
                   </motion.div>
                 ) : (
+                  // Empty State
                   <div className="text-center py-16">
-                    <p className="text-gray-400">No channels available for this category.</p>
+                    <p className="text-gray-400">
+                      No live streams available for this category.
+                    </p>
                   </div>
                 )}
               </TabsContent>
