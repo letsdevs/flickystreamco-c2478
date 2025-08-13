@@ -1,11 +1,17 @@
-
+// LiveStreamCard.tsx
 import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Play } from 'lucide-react';
-// ...existing code...
-import { LiveStream } from '@/pages/LiveStreams';
 import { Button } from './ui/button';
+
+export interface LiveStream {
+  channel_name: string;
+  logo: string;
+  catagory: string; // API sends this as "catagory"
+  url: string;
+  license_key: string;
+}
 
 interface LiveStreamCardProps {
   stream: LiveStream;
@@ -15,13 +21,10 @@ const LiveStreamCard: FC<LiveStreamCardProps> = ({ stream }) => {
   const navigate = useNavigate();
 
   const handleWatchClick = () => {
-    navigate(`/watch/live/${stream.match_id}`, { state: { stream } });
+    navigate(`/watch/live/${encodeURIComponent(stream.channel_name)}`, {
+      state: { stream },
+    });
   };
-
-  // Use direct URLs for images (proxy removed)
-  const banner = stream.banner;
-  const team1Flag = stream.team_1_flag;
-  const team2Flag = stream.team_2_flag;
 
   return (
     <motion.div
@@ -30,58 +33,28 @@ const LiveStreamCard: FC<LiveStreamCardProps> = ({ stream }) => {
       transition={{ duration: 0.2 }}
       className="bg-card/30 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 hover:border-accent/50 shadow-lg shadow-black/20 flex flex-col"
     >
-      {/* Banner */}
-      <div className="relative w-full aspect-video">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
+      {/* Channel Logo */}
+      <div className="relative w-full aspect-video flex items-center justify-center bg-black">
         <img
-          src={banner}
-          alt={stream.match_name}
-          className="w-full h-full object-cover"
+          src={stream.logo}
+          alt={stream.channel_name}
+          className="max-h-full max-w-full object-contain p-4"
           loading="lazy"
         />
-        {/* Event Category Badge */}
+        {/* Category Badge */}
         <div className="absolute top-3 right-3 z-20">
           <span className="bg-accent/90 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded">
-            {stream.event_catagory}
+            {stream.catagory}
           </span>
         </div>
-        {/* Event Name */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
-          <p className="text-white/80 text-sm">
-            {stream.event_name}
-          </p>
-          <h3 className="text-white font-semibold text-lg line-clamp-2">
-            {stream.match_name}
-          </h3>
-        </div>
       </div>
-      
-      {/* Teams */}
+
+      {/* Channel Info */}
       <div className="p-4 flex flex-col">
-        <div className="flex items-center justify-between py-2">
-          <div className="flex items-center space-x-2">
-            <img
-              src={team1Flag}
-              alt={stream.team_1}
-              className="w-8 h-8 object-cover rounded-full border border-white/20"
-            />
-            <span className="text-white text-sm font-medium line-clamp-1">
-              {stream.team_1}
-            </span>
-          </div>
-          <span className="text-white/60 text-xs font-bold">VS</span>
-          <div className="flex items-center space-x-2">
-            <span className="text-white text-sm font-medium text-right line-clamp-1">
-              {stream.team_2}
-            </span>
-            <img
-              src={team2Flag}
-              alt={stream.team_2}
-              className="w-8 h-8 object-cover rounded-full border border-white/20"
-            />
-          </div>
-        </div>
-        
+        <h3 className="text-white font-semibold text-lg line-clamp-2">
+          {stream.channel_name}
+        </h3>
+
         {/* Watch Button */}
         <Button
           onClick={handleWatchClick}
