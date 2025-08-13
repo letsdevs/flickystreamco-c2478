@@ -1,36 +1,62 @@
-
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { LiveStream } from '@/pages/LiveStreams';
 
-interface LiveStreamsResponse {
-  type: string;
-  generated_by: string;
-  total_mathes: number;
-  last_upaded: string;
-  matches: LiveStream[];
+// API Base URL
+export const CATEGORIES_API = 'https://sub.cinepapa.com';
+
+export interface Channel {
+  channel_name: string;
+  logo: string;
+  catagory: string; // note: typo kept because API sends it this way
+  url: string;
+  license_key: string;
 }
 
-export const LIVE_STREAMS_API = 'https://raw.githubusercontent.com/byte-capsule/FanCode-Hls-Fetcher/main/Fancode_hls_m3u8.Json';
-
-export const fetchLiveStreams = async (): Promise<LiveStreamsResponse> => {
+// Fetch all categories
+export const fetchCategories = async (): Promise<string[]> => {
   try {
-    const { data } = await axios.get<LiveStreamsResponse>(LIVE_STREAMS_API);
+    const { data } = await axios.get<string[]>(CATEGORIES_API);
     return data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(`Failed to fetch live streams: ${error.message}`);
+      throw new Error(`Failed to fetch categories: ${error.message}`);
     }
-    throw new Error('An unexpected error occurred while fetching live streams');
+    throw new Error('An unexpected error occurred while fetching categories');
   }
 };
 
-export const useLiveStreams = () => {
+// Fetch channels for a specific category
+export const fetchChannelsByCategory = async (category: string): Promise<Channel[]> => {
+  try {
+    const { data } = await axios.get<Channel[]>(`${CATEGORIES_API}/?${category}`);
+    return data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(`Failed to fetch channels for ${category}: ${error.message}`);
+    }
+    throw new Error(`An unexpected error occurred while fetching ${category} channels`);
+  }
+};
+
+// React Query hook for categories
+export const useCategories = () => {
   return useQuery({
-    queryKey: ['liveStreams'],
-    queryFn: fetchLiveStreams,
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+  });
+};
+
+// React Query hook for channels by category
+export const useChannels = (category: string) => {
+  return useQuery({
+    queryKey: ['channels', category],
+    queryFn: () => fetchChannelsByCategory(category),
+    enabled: !!category, // only fetch when category is provided
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
     retry: 2,
   });
 };
