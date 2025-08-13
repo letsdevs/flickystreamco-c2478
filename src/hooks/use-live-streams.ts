@@ -1,62 +1,47 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-// API Base URL
-export const CATEGORIES_API = 'https://sub.cinepapa.com';
-
-export interface Channel {
+export interface LiveStream {
   channel_name: string;
   logo: string;
-  catagory: string; // note: typo kept because API sends it this way
+  catagory: string;
   url: string;
-  license_key: string;
+  license_key?: string;
 }
 
-// Fetch all categories
-export const fetchCategories = async (): Promise<string[]> => {
-  try {
-    const { data } = await axios.get<string[]>(CATEGORIES_API);
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`Failed to fetch categories: ${error.message}`);
-    }
-    throw new Error('An unexpected error occurred while fetching categories');
-  }
-};
+const API_BASE = 'https://sub.cinepapa.com';
 
-// Fetch channels for a specific category
-export const fetchChannelsByCategory = async (category: string): Promise<Channel[]> => {
-  try {
-    const { data } = await axios.get<Channel[]>(`${CATEGORIES_API}/?${category}`);
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`Failed to fetch channels for ${category}: ${error.message}`);
-    }
-    throw new Error(`An unexpected error occurred while fetching ${category} channels`);
-  }
-};
+/**
+ * Custom hook to fetch live streams for a given category.
+ * @param category The category string (e.g., "dangal", "epic")
+ */
+export function useLiveStreams(category: string) {
+  const [streams, setStreams] = useState<LiveStream[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-// React Query hook for categories
-export const useCategories = () => {
-  return useQuery({
-    queryKey: ['categories'],
-    queryFn: fetchCategories,
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
-    retry: 2,
-  });
-};
+  useEffect(() => {
+    if (!category) return;
 
-// React Query hook for channels by category
-export const useChannels = (category: string) => {
-  return useQuery({
-    queryKey: ['channels', category],
-    queryFn: () => fetchChannelsByCategory(category),
-    enabled: !!category, // only fetch when category is provided
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
-    retry: 2,
-  });
-};
+    const fetchStreams = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const { data } = await axios.get<LiveStream[]>(
+          `${API_BASE}/?${encodeURIComponent(category)}`
+        );
+        setStreams(data);
+      } catch (err) {
+        console.error('Failed to fetch streams:', err);
+        setError('Failed to load streams.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStreams();
+  }, [category]);
+
+  return { streams, loading, error };
+}
