@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Home, Film, Tv2, Trophy, Flame, Search, User, History, X, Send
+  Home, Film, Tv2, Trophy, Flame, Search, User, History, X, Send, Tv
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks';
@@ -61,7 +61,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     { name: 'Movies', path: '/movie', icon: Film },
     { name: 'TV Shows', path: '/tv', icon: Tv2 },
     { name: 'Trending', path: '/trending', icon: Flame },
-    { name: 'Live', path: '/live', icon: Flame },
+    { name: 'Live', path: '/live', icon: Tv},
     { name: 'Telegram', path: 'https://telegram.me/cine_papa', icon: Send },
     { name: 'Search', path: '/search', icon: Search },
   ];
