@@ -12,9 +12,9 @@ const NavLinks = () => {
     { name: 'Home', path: '/' },
     { name: 'Movies', path: '/movie' },
     { name: 'TV Shows', path: '/tv' },
-    { name: 'Sports', path: '/sports' },
-    { name: 'LiveTv', path: '/live' },
     { name: 'Trending', path: '/trending' },
+    { name: 'LiveTv', path: '/live' },
+    { name: 'Telegram', path: 'https://telegram.me/cine_papa' },
   ];
 
   return (
