@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,15 +8,13 @@ import { toast } from '@/hooks/use-toast';
 import PageTransition from '@/components/PageTransition';
 import { useLiveStreams } from '@/hooks/use-live-streams';
 import { LiveStream } from '@/pages/LiveStreams';
-// Removed custom API proxy imports
-
+import LiveStreamCard from '@/components/LiveStreamCard';
 
 const LiveStreamPlayer = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Try to get stream from location state first (for better UX)
   const [stream, setStream] = useState<LiveStream | null>(
     location.state?.stream || null
   );
@@ -25,29 +22,25 @@ const LiveStreamPlayer = () => {
   const { data, isLoading, isError } = useLiveStreams();
   const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
   const [playerError, setPlayerError] = useState<string | null>(null);
-  
-  // Initialize proxy system when component mounts
-  useEffect(() => {
-    const init = async () => {
 
-    };
-    
-    init();
-  }, []);
-  
-  // If stream wasn't passed through navigation state, find it in the fetched data
+  // Find the current stream if it wasn't passed via location
   useEffect(() => {
     if (!stream && data?.matches && id) {
       const matchId = parseInt(id, 10);
       const foundStream = data.matches.find(match => match.match_id === matchId);
-      
-      if (foundStream) {
-        setStream(foundStream);
-      }
+      if (foundStream) setStream(foundStream);
     }
   }, [data, id, stream]);
 
-  // Handle sharing the stream
+  // Compute similar channels (random order, same category)
+  const similarChannels = useMemo(() => {
+    if (!stream || !data?.matches) return [];
+    const sameCategory = data.matches.filter(
+      s => s.event_catagory === stream.event_catagory && s.match_id !== stream.match_id
+    );
+    return sameCategory.sort(() => Math.random() - 0.5).slice(0, 6); // limit to 6 random
+  }, [stream, data]);
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -60,7 +53,6 @@ const LiveStreamPlayer = () => {
         console.error('Error sharing:', error);
       }
     } else {
-      // Fallback for browsers that don't support the Web Share API
       navigator.clipboard.writeText(window.location.href);
       toast({
         title: 'Link copied to clipboard',
@@ -69,7 +61,6 @@ const LiveStreamPlayer = () => {
     }
   };
 
-  // Player event handlers
   const handlePlayerLoad = () => {
     setIsPlayerLoaded(true);
     setPlayerError(null);
@@ -115,20 +106,20 @@ const LiveStreamPlayer = () => {
           </div>
         ) : (
           <>
+            {/* Player */}
             <div className="w-full aspect-video mb-6 overflow-hidden rounded-lg shadow-xl">
-              {stream && (
-                <video
-                  src={stream.stream_link}
-                  poster={stream.banner}
-                  title={stream.match_name}
-                  controls
-                  className="w-full h-full"
-                  onLoadedData={handlePlayerLoad}
-                  onError={() => handlePlayerError('Failed to load video')}
-                />
-              )}
+              <video
+                src={stream.stream_link}
+                poster={stream.banner}
+                title={stream.match_name}
+                controls
+                className="w-full h-full"
+                onLoadedData={handlePlayerLoad}
+                onError={() => handlePlayerError('Failed to load video')}
+              />
             </div>
             
+            {/* Stream details */}
             <div className="bg-card/30 rounded-lg backdrop-blur-sm p-6">
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div>
@@ -137,25 +128,12 @@ const LiveStreamPlayer = () => {
                 </div>
                 
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleShare}
-                  >
+                  <Button variant="outline" size="sm" onClick={handleShare}>
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
                   </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
-                    <a 
-                      href={stream.stream_link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={stream.stream_link} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Open direct URL
                     </a>
@@ -165,6 +143,7 @@ const LiveStreamPlayer = () => {
               
               <Separator className="my-4" />
               
+              {/* Teams info */}
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-center">
@@ -205,6 +184,18 @@ const LiveStreamPlayer = () => {
                 </div>
               )}
             </div>
+
+            {/* Similar Channels */}
+            {similarChannels.length > 0 && (
+              <div className="mt-10">
+                <h2 className="text-xl font-bold text-white mb-4">Similar Channels</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {similarChannels.map(sim => (
+                    <LiveStreamCard key={sim.match_id} stream={sim} />
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
